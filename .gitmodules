@@ -1,0 +1,3 @@
+[submodule "bad-commit-message-blocker"]
+	path = bad-commit-message-blocker
+	url = https://github.com/platisd/bad-commit-message-blocker
