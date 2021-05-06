@@ -8,6 +8,7 @@ import os
 colorCode = r"(?<=\033\[)9[0-9](?![0-9])" #find 90-99 ansi codes (bright colors)
 commentLine = re.compile("^#.*\n?", re.MULTILINE) #find comment lines
 afterSlash = r"[^\/\\]+$" #find last item in a path
+getSlash = r"[\/\\]" #find slash
 
 f = open(sys.argv[1], "r")
 msg = re.sub(commentLine, "", f.read()) #remove comments
@@ -20,7 +21,7 @@ if os.path.isdir(path) == False:
         print("download failed")
         exit(0)
 
-path += "/bad-commit-message-blocker.py"
+path = path + re.search(getSlash, path).group(0) + "bad_commit_message_blocker.py"
 
 if os.path.exists(path) == False:
     print("script not found, downloading...")
