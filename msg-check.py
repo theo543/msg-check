@@ -11,7 +11,23 @@ afterSlash = r"[^\/\\]+$" #find last item in a path
 
 f = open(sys.argv[1], "r")
 msg = re.sub(commentLine, "", f.read()) #remove comments
-path = re.sub(afterSlash, "bad-commit-message-blocker/bad_commit_message_blocker.py", os.path.realpath(sys.argv[0])) #supports symlinks
+path = re.sub(afterSlash, "bad-commit-message-blocker", os.path.realpath(sys.argv[0])) #supports symlinks
+
+if os.path.isdir(path) == False:
+    print("script folder not found, downloading...")
+    os.system("git submodule update --init --recursive --force")
+    if os.path.isdir(path) == False:
+        print("download failed")
+        exit(0)
+
+path += "/bad-commit-message-blocker.py"
+
+if os.path.exists(path) == False:
+    print("script not found, downloading...")
+    os.system("git submodule update --init --recursive --force")
+    if os.path.exists(path) == False:
+        print("download failed")
+        exit(0)
 
 proc = subprocess.run(args=["python", path, "--message", msg], capture_output=True, text=True)
 
