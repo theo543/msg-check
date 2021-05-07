@@ -7,8 +7,8 @@ import os
 
 color_code = r"(?<=\033\[)9(?=[0-9])(?![0-9][0-9])"  # find 90-99 ansi codes (bright colors) and match only 9
 comment_line = re.compile("^#.*\n?", re.MULTILINE)  # find comment lines
-after_slash = r"[^\/\\]+$"  # find last item in a path
-get_slash = r"[\/\\]"  # find slash
+after_slash = r"[^/\\]+$"  # find last item in a path
+get_slash = r"[/\\]"  # find slash
 
 f = open(sys.argv[1], "r")
 msg = re.sub(comment_line, "", f.read())  # remove comments
