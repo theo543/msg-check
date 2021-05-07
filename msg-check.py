@@ -12,25 +12,13 @@ get_slash = r"[\/\\]"  # find slash
 
 f = open(sys.argv[1], "r")
 msg = re.sub(comment_line, "", f.read())  # remove comments
-path = re.sub(after_slash, "bad-commit-message-blocker", os.path.realpath(sys.argv[0]))  # supports symlinks
+folder_path = re.sub(after_slash, "bad-commit-message-blocker", os.path.realpath(sys.argv[0]))  # supports symlinks
+script_path = folder_path + re.search(get_slash, folder_path).group(0) + "bad_commit_message_blocker.py"
 
-if not os.path.isdir(path):
-    print("script folder not found, downloading...")
+if not os.path.isdir(folder_path) or not os.path.exists(script_path):
     os.system("git submodule update --init --recursive --force")
-    if not os.path.isdir(path):
-        print("download failed")
-        exit(0)
 
-path = path + re.search(get_slash, path).group(0) + "bad_commit_message_blocker.py"
-
-if not os.path.exists(path):
-    print("script not found, downloading...")
-    os.system("git submodule update --init --recursive --force")
-    if not os.path.exists(path):
-        print("download failed")
-        exit(0)
-
-proc = subprocess.run(args=["python", path, "--message", msg], capture_output=True, text=True)
+proc = subprocess.run(args=["python", script_path, "--message", msg], capture_output=True, text=True)
 
 # replace bright color codes with normal codes - git breaks bright codes for some reason
 out = re.sub(color_code, "3", str(proc.stdout))
