@@ -5,7 +5,7 @@ import subprocess
 import re
 import os
 
-colorCode = r"(?<=\033\[)9[0-9](?![0-9])" #find 90-99 ansi codes (bright colors)
+colorCode = r"(?<=\033\[)9(?=[0-9])(?![0-9][0-9])" #find 90-99 ansi codes (bright colors) and match only 9
 commentLine = re.compile("^#.*\n?", re.MULTILINE) #find comment lines
 afterSlash = r"[^\/\\]+$" #find last item in a path
 getSlash = r"[\/\\]" #find slash
@@ -33,7 +33,7 @@ if os.path.exists(path) == False:
 proc = subprocess.run(args=["python", path, "--message", msg], capture_output=True, text=True)
 
 #replace bright color codes with normal codes - git breaks bright codes for some reason
-out = re.sub(colorCode, lambda match : str(int(match.group()) - 60), proc.stdout)
+out = re.sub(colorCode, "3", str(proc.stdout))
 
 print(out)
 
