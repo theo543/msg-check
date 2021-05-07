@@ -23,6 +23,7 @@ proc = subprocess.run(args=["python", script_path, "--message", msg], capture_ou
 # replace bright color codes with normal codes - git breaks bright codes for some reason
 out = re.sub(color_code, "3", str(proc.stdout))
 
+print(proc.stderr) # report errors
 print(out)
 
 if proc.returncode == 1:
