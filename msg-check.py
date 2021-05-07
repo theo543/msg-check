@@ -5,38 +5,38 @@ import subprocess
 import re
 import os
 
-colorCode = r"(?<=\033\[)9(?=[0-9])(?![0-9][0-9])" #find 90-99 ansi codes (bright colors) and match only 9
-commentLine = re.compile("^#.*\n?", re.MULTILINE) #find comment lines
-afterSlash = r"[^\/\\]+$" #find last item in a path
-getSlash = r"[\/\\]" #find slash
+colorCode = r"(?<=\033\[)9(?=[0-9])(?![0-9][0-9])"  # find 90-99 ansi codes (bright colors) and match only 9
+commentLine = re.compile("^#.*\n?", re.MULTILINE)  # find comment lines
+afterSlash = r"[^\/\\]+$"  # find last item in a path
+getSlash = r"[\/\\]"  # find slash
 
 f = open(sys.argv[1], "r")
-msg = re.sub(commentLine, "", f.read()) #remove comments
-path = re.sub(afterSlash, "bad-commit-message-blocker", os.path.realpath(sys.argv[0])) #supports symlinks
+msg = re.sub(commentLine, "", f.read())  # remove comments
+path = re.sub(afterSlash, "bad-commit-message-blocker", os.path.realpath(sys.argv[0]))  # supports symlinks
 
-if os.path.isdir(path) == False:
+if not os.path.isdir(path):
     print("script folder not found, downloading...")
     os.system("git submodule update --init --recursive --force")
-    if os.path.isdir(path) == False:
+    if not os.path.isdir(path):
         print("download failed")
         exit(0)
 
 path = path + re.search(getSlash, path).group(0) + "bad_commit_message_blocker.py"
 
-if os.path.exists(path) == False:
+if not os.path.exists(path):
     print("script not found, downloading...")
     os.system("git submodule update --init --recursive --force")
-    if os.path.exists(path) == False:
+    if not os.path.exists(path):
         print("download failed")
         exit(0)
 
 proc = subprocess.run(args=["python", path, "--message", msg], capture_output=True, text=True)
 
-#replace bright color codes with normal codes - git breaks bright codes for some reason
+# replace bright color codes with normal codes - git breaks bright codes for some reason
 out = re.sub(colorCode, "3", str(proc.stdout))
 
 print(out)
 
-if(proc.returncode == 1):
+if proc.returncode == 1:
     print("\033[31mCheck failed, format message or use --no-verify\033[0m\n")
     exit(1)
