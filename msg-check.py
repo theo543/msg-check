@@ -1,78 +1,96 @@
 #!/usr/bin/env python
-
 import configparser
 import os
 import re
 import subprocess
 import sys
 
-default_config = {
+DEFAULT_CONFIG = {
     'arguments': {'body': '72', 'subject': '50'},
     'rules': {str(nr): '1' for nr in range(1, 7)}
 }
-parser = configparser.ConfigParser()
-color_code = r"(?<=\033\[)9(?=[0-9])(?![0-9][0-9])"  # find 90-99 ansi codes (bright colors) and match only 9
-comment_line = re.compile("^#.*\n?", re.MULTILINE)  # find comment lines
-after_slash = r"[^/\\]+$"  # find last item in a path
-get_slash = r"[/\\]"  # find slash
 
-f = open(sys.argv[1], "r")
-msg = re.sub(comment_line, "", f.read())  # remove comments
-folder_path = re.sub(after_slash, "bad-commit-message-blocker", os.path.realpath(sys.argv[0]))  # supports symlinks
-slash = re.search(get_slash, folder_path).group(0)
-script_path = folder_path + slash + "bad_commit_message_blocker.py"
-config_path = re.sub(after_slash, "msg-check-config.ini", os.path.realpath(sys.argv[0]))
 
-try:
-    parser.read(config_path)
-except (FileNotFoundError, configparser.Error) as e:
-    parser = configparser.ConfigParser()  # reset parser
-    cfg = open(config_path, "w")
-    parser.read_dict(default_config)
-    parser.write(cfg)  # reset config file
-    print("Error reading config, config reset.")
+def main():
+    # compute paths
+    py_file = os.path.realpath(sys.argv[0])  # supports symlinks
+    py_folder = re.sub(r"[^/\\]+$", "", py_file)
+    bcmb_path = py_folder + "bad-commit-message-blocker" + py_folder[-1] + "bad_commit_message_blocker.py"
+    config_path = py_folder + "msg-check-config.ini"
 
-# validate config
-changed = False
-for section, properties in default_config.items():
-    if not parser.has_section(section):
-        parser.add_section(section)
-    for val in properties:
-        if not(parser.has_option(section, val) and re.fullmatch("[0-9]*", parser[section][val])):
-            parser[section][val] = default_config[section][val]
-            changed = True
-if changed:
-    parser.write(open(config_path, "w"))
-    print("Missing/invalid config values reset.")
+    msg = cleanup_message(open(sys.argv[1], "r").read())  # remove comments
 
-if re.match(r"^[\n ]*$", msg):
-    exit(0)  # do not check empty message
+    parser = configparser.ConfigParser()
 
-if not os.path.isdir(folder_path) or not os.path.exists(script_path):
-    os.system("git submodule update --init --recursive --force")
+    try:
+        parser.read(config_path)
+        if repair_config(parser):
+            parser.write(open(config_path, "w"))
+            print("Invalid/missing config data reset")
+    except (FileNotFoundError, configparser.Error):
+        parser = configparser.ConfigParser()  # reset parser
+        parser.read_dict(DEFAULT_CONFIG)
+        parser.write(open(config_path, "w"))  # reset config file
+        print("Invalid/missing config file reset")
 
-proc = subprocess.run(
-    args=["python", script_path, "--message", msg, "--subject-limit", parser['arguments']['subject'], "--body-limit",
-          parser['arguments']['body']], capture_output=True, text=True)
+    if re.match(r"^[\n ]*$", msg):
+        exit(0)  # do not check empty message
 
-# replace bright color codes with normal codes - git breaks bright codes for some reason
-out = re.sub(color_code, "3", str(proc.stdout))
+    if not os.path.isfile(bcmb_path):
+        os.system("git submodule update --init --recursive --force")
+        if not os.path.isfile(bcmb_path):
+            print("Failed to download bad-commit-message-blocker submodule")
+            exit(0)
 
-out = out.split('\n')
-block_commit = False
-i = 1
-while i <= 6:
-    j = len(out) - 9 + i
-    if parser['rules'][str(i)] == '0':
-        out[j] = re.sub("(PASSED|FAILED)", "\033[34m\\1", out[j])  # change color to blue
-    else:
-        block_commit |= "FAILED" in out[j]
-    i += 1
-out = '\n'.join(out)
+    proc = subprocess.run(
+        args=["python", bcmb_path, "--message", msg, "--subject-limit", parser['arguments']['subject'], "--body-limit",
+              parser['arguments']['body']], capture_output=True, text=True)
 
-print(proc.stderr)  # report errors
-print(out)
+    # replace bright color codes with normal codes - git breaks bright codes for some reason
+    # regex matches a 9 preceded by \033 and followed by only one other digit
+    out = re.sub(r"(?<=\033\[)9(?=[0-9])(?![0-9][0-9])", "3", str(proc.stdout))
+    out = out.split('\n')[-9:-1]
+    out, block_commit = parse_rules(out, parser['rules'])
+    print(proc.stderr)  # report errors
+    print('\n'.join(out))
+    if block_commit:
+        print("\033[31mCheck failed, format message or use --no-verify\033[0m")
+        print("Your message was:")
+        print(msg)
+        exit(1)
 
-if block_commit:
-    print("\033[31mCheck failed, format message or use --no-verify\033[0m\n")
-    exit(1)
+
+def repair_config(p: configparser):
+    change = False
+    for s, a in DEFAULT_CONFIG.items():
+        if not p.has_section(s):
+            p.add_section(s)
+        for o in a:
+            if not (p.has_option(s, o) and re.fullmatch("[0-9]*", p[s][o])):
+                p[s][o] = DEFAULT_CONFIG[s][o]
+                change = True
+    return change
+
+
+def cleanup_message(s: str):
+    # replicate git message cleanup:
+    s = re.sub(re.compile(r"^#.*\n?", re.MULTILINE), "", s)  # remove comments
+    s = s.strip('\n')  # remove trailing newlines
+    # does not support commits with --message if you try to start the message with #
+    # so don't start with #
+    # example: don't use "#23 fix issue", use "Fix issue #23"
+    return s
+
+
+def parse_rules(s, r):
+    fail = False
+    for i in range(1, 7):
+        if r[str(i)] == '0':
+            s[i] = re.sub("(PASSED|FAILED)", "\033[34m\\1", s[i])  # change color to blue
+        else:
+            fail |= "FAILED" in s[i]
+    return s, fail
+
+
+if __name__ == "__main__":
+    main()
