@@ -3,7 +3,7 @@ I wrote this script to use as a global hook to check all my commit messages.
 
 # Configuration
 
-Use the arguments section in config.ini to modify the subject and body length limits.
+Use the arguments section in msg-check-config.ini to modify the subject and body length limits.
 
 Use the rules section to disable rules. Disabled rules will be shown in blue and will not block commits.
 
