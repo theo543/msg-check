@@ -10,16 +10,13 @@ DEFAULT_CONFIG = {
     'arguments': {'body': '72', 'subject': '50'},
     'rules': {str(nr): '1' for nr in range(1, 7)}
 }
-COLOR_CODE = r"(?<=\033\[)9(?=[0-9])(?![0-9][0-9])"  # find 90-99 ansi codes (bright colors) and match only 9
-COMMENT_LINE = re.compile("^#.*\n?", re.MULTILINE)  # find comment lines
 AFTER_SLASH = r"[^/\\]+$"  # find last item in a path
-GET_SLASH = r"[/\\]"  # find slash
 
 parser = configparser.ConfigParser()
 f = open(sys.argv[1], "r")
-msg = re.sub(COMMENT_LINE, "", f.read())  # remove comments
+msg = re.sub(re.compile("^#.*\n?", re.MULTILINE), "", f.read())  # remove comments
 folder_path = re.sub(AFTER_SLASH, "bad-commit-message-blocker", os.path.realpath(sys.argv[0]))  # supports symlinks
-slash = re.search(GET_SLASH, folder_path).group(0)
+slash = re.search(r"[/\\]", folder_path).group(0)
 script_path = folder_path + slash + "bad_commit_message_blocker.py"
 config_path = re.sub(AFTER_SLASH, "msg-check-config.ini", os.path.realpath(sys.argv[0]))
 
@@ -56,7 +53,8 @@ proc = subprocess.run(
           parser['arguments']['body']], capture_output=True, text=True)
 
 # replace bright color codes with normal codes - git breaks bright codes for some reason
-out = re.sub(COLOR_CODE, "3", str(proc.stdout))
+# regex matches a 9 preceded by \033 and followed by only one other digit
+out = re.sub(r"(?<=\033\[)9(?=[0-9])(?![0-9][0-9])", "3", str(proc.stdout))
 
 out = out.split('\n')
 block_commit = False
