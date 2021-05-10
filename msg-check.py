@@ -36,8 +36,11 @@ def main():
     if re.match(r"^[\n ]*$", msg):
         exit(0)  # do not check empty message
 
-    if not os.path.isdir(bcmb_folder) or not os.path.exists(bcmb_path):
+    if not os.path.isfile(bcmb_path):
         os.system("git submodule update --init --recursive --force")
+        if not os.path.isfile(bcmb_path):
+            print("Failed to download bad-commit-message-blocker submodule")
+            exit(0)
 
     proc = subprocess.run(
         args=["python", bcmb_path, "--message", msg, "--subject-limit", parser['arguments']['subject'], "--body-limit",
