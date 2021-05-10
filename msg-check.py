@@ -15,8 +15,7 @@ def main():
     # compute paths
     py_file = os.path.realpath(sys.argv[0])  # supports symlinks
     py_folder = re.sub(r"[^/\\]+$", "", py_file)
-    bcmb_folder = py_folder + "bad-commit-message-blocker"
-    bcmb_path = bcmb_folder + re.search(r"[/\\]", py_file).group() + "bad_commit_message_blocker.py"
+    bcmb_path = py_folder + "bad-commit-message-blocker" + py_folder[-1] + "bad_commit_message_blocker.py"
     config_path = py_folder + "msg-check-config.ini"
 
     msg = cleanup_message(open(sys.argv[1], "r").read())  # remove comments
@@ -28,7 +27,7 @@ def main():
         if repair_config(parser):
             parser.write(open(config_path, "w"))
             print("Invalid/missing config data reset")
-    except (FileNotFoundError, configparser.Error) as e:
+    except (FileNotFoundError, configparser.Error):
         parser = configparser.ConfigParser()  # reset parser
         parser.read_dict(DEFAULT_CONFIG)
         parser.write(open(config_path, "w"))  # reset config file
