@@ -19,8 +19,7 @@ def main():
     bcmb_path = bcmb_folder + re.search(r"[/\\]", py_file).group() + "bad_commit_message_blocker.py"
     config_path = py_folder + "msg-check-config.ini"
 
-    msg = re.sub(re.compile("^#.*\n?", re.MULTILINE), "", open(sys.argv[1], "r").read())  # remove comments
-    # does not support commits with --message ???
+    msg = cleanup_message(open(sys.argv[1], "r").read())  # remove comments
 
     parser = configparser.ConfigParser()
 
@@ -79,6 +78,14 @@ def repair_config(p: configparser):
                 p[s][o] = DEFAULT_CONFIG[s][o]
                 change = True
     return change
+
+
+def cleanup_message(s: str):
+    s = re.sub(re.compile("^#.*\n?", re.MULTILINE), "", s)
+    # does not support commits with --message if any line starts with "#"
+    # so don't start lines with '#'
+    # instead of "#23 fix" use "Fix #23"
+    return s
 
 
 if __name__ == "__main__":
