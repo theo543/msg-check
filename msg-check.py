@@ -1,14 +1,28 @@
 #!/usr/bin/env python
 
-import sys
-import subprocess
-import re
+import configparser
 import os
+import re
+import subprocess
+import sys
 
+parser = configparser.ConfigParser()
 color_code = r"(?<=\033\[)9(?=[0-9])(?![0-9][0-9])"  # find 90-99 ansi codes (bright colors) and match only 9
 comment_line = re.compile("^#.*\n?", re.MULTILINE)  # find comment lines
 after_slash = r"[^/\\]+$"  # find last item in a path
 get_slash = r"[/\\]"  # find slash
+
+try:
+    parser.read("config.ini")
+    parser.options("arguments")
+except (FileNotFoundError, configparser.Error, IndexError) as e:
+    cfg = open("config.ini", "w")
+    parser = configparser.ConfigParser()
+    parser.add_section("arguments")
+    parser['arguments']['subject'] = '50'
+    parser['arguments']['body'] = '72'
+    parser.write(cfg)  # reset config file
+    print("Error reading config, config reset.")
 
 f = open(sys.argv[1], "r")
 msg = re.sub(comment_line, "", f.read())  # remove comments
@@ -21,7 +35,9 @@ if msg == "":
 if not os.path.isdir(folder_path) or not os.path.exists(script_path):
     os.system("git submodule update --init --recursive --force")
 
-proc = subprocess.run(args=["python", script_path, "--message", msg], capture_output=True, text=True)
+proc = subprocess.run(
+    args=["python", script_path, "--message", msg, "--subject-limit", parser['arguments']['subject'], "--body-limit",
+          parser['arguments']['body']], capture_output=True, text=True)
 
 # replace bright color codes with normal codes - git breaks bright codes for some reason
 out = re.sub(color_code, "3", str(proc.stdout))
