@@ -45,7 +45,7 @@ if changed:
     parser.write(open(config_path, "w"))
     print("Missing/invalid config values reset.")
 
-if msg == "":
+if re.match(r"^[\n ]*$", msg):
     exit(0)  # do not check empty message
 
 if not os.path.isdir(folder_path) or not os.path.exists(script_path):
