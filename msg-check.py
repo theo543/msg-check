@@ -26,25 +26,14 @@ def main():
 
     try:
         parser.read(config_path)
+        if repair_config(parser):
+            parser.write(open(config_path, "w"))
+            print("Invalid/missing config data reset")
     except (FileNotFoundError, configparser.Error) as e:
         parser = configparser.ConfigParser()  # reset parser
-        cfg = open(config_path, "w")
         parser.read_dict(DEFAULT_CONFIG)
-        parser.write(cfg)  # reset config file
-        print("Error reading config, config reset.")
-
-    # validate config
-    changed = False
-    for section, properties in DEFAULT_CONFIG.items():
-        if not parser.has_section(section):
-            parser.add_section(section)
-        for val in properties:
-            if not (parser.has_option(section, val) and re.fullmatch("[0-9]*", parser[section][val])):
-                parser[section][val] = DEFAULT_CONFIG[section][val]
-                changed = True
-    if changed:
-        parser.write(open(config_path, "w"))
-        print("Missing/invalid config values reset.")
+        parser.write(open(config_path, "w"))  # reset config file
+        print("Invalid/missing config file reset")
 
     if re.match(r"^[\n ]*$", msg):
         exit(0)  # do not check empty message
@@ -78,6 +67,18 @@ def main():
     if block_commit:
         print("\033[31mCheck failed, format message or use --no-verify\033[0m\n")
         exit(1)
+
+
+def repair_config(p: configparser):
+    change = False
+    for s, a in DEFAULT_CONFIG.items():
+        if not p.has_section(s):
+            p.add_section(s)
+        for o in a:
+            if not (p.has_option(s, o) and re.fullmatch("[0-9]*", p[s][o])):
+                p[s][o] = DEFAULT_CONFIG[s][o]
+                change = True
+    return change
 
 
 if __name__ == "__main__":
