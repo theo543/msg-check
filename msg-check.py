@@ -10,15 +10,14 @@ DEFAULT_CONFIG = {
     'arguments': {'body': '72', 'subject': '50'},
     'rules': {str(nr): '1' for nr in range(1, 7)}
 }
-AFTER_SLASH = re.compile(r"[^/\\]+$")  # find last item in a path
-
 
 # compute paths
 py_file = os.path.realpath(sys.argv[0])  # supports symlinks
-py_folder = re.sub(AFTER_SLASH, "", py_file)
-bcmb_folder = re.sub(AFTER_SLASH, "bad-commit-message-blocker", os.path.realpath(sys.argv[0]))
+py_folder = re.sub(r"[^/\\]+$", "", py_file)
+bcmb_folder = py_folder + "bad-commit-message-blocker"
 bcmb_path = bcmb_folder + re.search(r"[/\\]", py_file).group() + "bad_commit_message_blocker.py"
-config_path = re.sub(AFTER_SLASH, "msg-check-config.ini", os.path.realpath(sys.argv[0]))
+config_path = py_folder + "msg-check-config.ini"
+
 msg = re.sub(re.compile("^#.*\n?", re.MULTILINE), "", open(sys.argv[1], "r").read())  # remove comments
 # does not support commits with --message ???
 
