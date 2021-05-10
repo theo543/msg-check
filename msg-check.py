@@ -50,21 +50,10 @@ def main():
     # regex matches a 9 preceded by \033 and followed by only one other digit
     out = re.sub(r"(?<=\033\[)9(?=[0-9])(?![0-9][0-9])", "3", str(proc.stdout))
 
-    out = out.split('\n')
-    block_commit = False
-    i = 1
-    while i <= 6:
-        j = len(out) - 9 + i
-        if parser['rules'][str(i)] == '0':
-            out[j] = re.sub("(PASSED|FAILED)", "\033[34m\\1", out[j])  # change color to blue
-        else:
-            block_commit |= "FAILED" in out[j]
-        i += 1
-    out = '\n'.join(out)
+    out, block_commit = parse_rules(out, parser['rules'])
 
     print(proc.stderr)  # report errors
     print(out)
-
     if block_commit:
         print("\033[31mCheck failed, format message or use --no-verify\033[0m\n")
         exit(1)
@@ -88,6 +77,21 @@ def cleanup_message(s: str):
     # so don't start lines with '#'
     # instead of "#23 fix" use "Fix #23"
     return s
+
+
+def parse_rules(s: str, r):
+    s = s.split('\n')
+    block_commit = False
+    i = 1
+    while i <= 6:
+        j = len(s) - 9 + i
+        if r[str(i)] == '0':
+            s[j] = re.sub("(PASSED|FAILED)", "\033[34m\\1", s[j])  # change color to blue
+        else:
+            block_commit |= "FAILED" in s[j]
+        i += 1
+    s = '\n'.join(s)
+    return s, block_commit
 
 
 if __name__ == "__main__":
