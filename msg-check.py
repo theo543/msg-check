@@ -14,13 +14,17 @@ get_slash = r"[/\\]"  # find slash
 
 try:
     parser.read("config.ini")
+    parser.options("rules")
     parser.options("arguments")
 except (FileNotFoundError, configparser.Error, IndexError) as e:
     cfg = open("config.ini", "w")
     parser = configparser.ConfigParser()
     parser.add_section("arguments")
+    parser.add_section("rules")
     parser['arguments']['subject'] = '50'
     parser['arguments']['body'] = '72'
+    for i in range(1, 6):
+        parser['rules'][str(i)] = 'true'
     parser.write(cfg)  # reset config file
     print("Error reading config, config reset.")
 
