@@ -61,7 +61,7 @@ out = re.sub(color_code, "3", str(proc.stdout))
 out = out.split('\n')
 block_commit = False
 i = 1
-while i < 6:
+while i <= 6:
     j = len(out) - 9 + i
     if parser['rules'][str(i)] == '0':
         out[j] = re.sub("(PASSED|FAILED)", "\033[34m\\1", out[j])  # change color to blue
