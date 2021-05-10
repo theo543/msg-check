@@ -10,7 +10,7 @@ DEFAULT_CONFIG = {
     'arguments': {'body': '72', 'subject': '50'},
     'rules': {str(nr): '1' for nr in range(1, 7)}
 }
-AFTER_SLASH = r"[^/\\]+$"  # find last item in a path
+AFTER_SLASH = re.compile(r"[^/\\]+$")  # find last item in a path
 
 
 # compute paths
