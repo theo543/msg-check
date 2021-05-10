@@ -81,17 +81,13 @@ def cleanup_message(s: str):
 
 def parse_rules(s: str, r):
     s = s.split('\n')
-    block_commit = False
-    i = 1
-    while i <= 6:
-        j = len(s) - 9 + i
-        if r[str(i)] == '0':
-            s[j] = re.sub("(PASSED|FAILED)", "\033[34m\\1", s[j])  # change color to blue
+    fail = False
+    for line, rule in [(len(s) - 8 + x, r[str(x + 1)]) for x in range(0, 6)]:
+        if rule == '0':
+            s[line] = re.sub("(PASSED|FAILED)", "\033[34m\\1", s[line])  # change color to blue
         else:
-            block_commit |= "FAILED" in s[j]
-        i += 1
-    s = '\n'.join(s)
-    return s, block_commit
+            fail |= "FAILED" in s[line]
+    return '\n'.join(s), fail
 
 
 if __name__ == "__main__":
