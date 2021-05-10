@@ -49,13 +49,14 @@ def main():
     # replace bright color codes with normal codes - git breaks bright codes for some reason
     # regex matches a 9 preceded by \033 and followed by only one other digit
     out = re.sub(r"(?<=\033\[)9(?=[0-9])(?![0-9][0-9])", "3", str(proc.stdout))
-
+    out = out.split('\n')[-9:-1]
     out, block_commit = parse_rules(out, parser['rules'])
-
     print(proc.stderr)  # report errors
-    print(out)
+    print('\n'.join(out))
     if block_commit:
-        print("\033[31mCheck failed, format message or use --no-verify\033[0m\n")
+        print("\033[31mCheck failed, format message or use --no-verify\033[0m")
+        print("Your message was:")
+        print(msg)
         exit(1)
 
 
@@ -72,22 +73,24 @@ def repair_config(p: configparser):
 
 
 def cleanup_message(s: str):
-    s = re.sub(re.compile("^#.*\n?", re.MULTILINE), "", s)
-    # does not support commits with --message if any line starts with "#"
-    # so don't start lines with '#'
-    # instead of "#23 fix" use "Fix #23"
+    # replicate git message cleanup:
+    s = re.sub(re.compile(r"^#.*\n?", re.MULTILINE), "", s) # remove comments
+    s = s.strip('\n')  # remove trailing newlines
+    s = '\n'.join([x.strip() for x in s.split('\n')])  # remove trailing whitespace from each line
+    # does not support commits with --message if you try to start the message with #
+    # so don't start with #
+    # example: don't use "#23 fix issue", use "Fix issue #23"
     return s
 
 
-def parse_rules(s: str, r):
-    s = s.split('\n')
+def parse_rules(s, r):
     fail = False
-    for line, rule in [(len(s) - 8 + x, r[str(x + 1)]) for x in range(0, 6)]:
-        if rule == '0':
-            s[line] = re.sub("(PASSED|FAILED)", "\033[34m\\1", s[line])  # change color to blue
+    for i in range(1, 7):
+        if r[str(i)] == '0':
+            s[i] = re.sub("(PASSED|FAILED)", "\033[34m\\1", s[i])  # change color to blue
         else:
-            fail |= "FAILED" in s[line]
-    return '\n'.join(s), fail
+            fail |= "FAILED" in s[i]
+    return s, fail
 
 
 if __name__ == "__main__":
