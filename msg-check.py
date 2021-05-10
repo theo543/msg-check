@@ -56,9 +56,21 @@ proc = subprocess.run(
 # replace bright color codes with normal codes - git breaks bright codes for some reason
 out = re.sub(color_code, "3", str(proc.stdout))
 
+out = out.split('\n')
+block_commit = False
+i = 1
+while i < 6:
+    j = len(out) - 9 + i
+    if parser['rules'][str(i)] == '0':
+        out[j] = re.sub("(PASSED|FAILED)", "\033[34m\\1", out[j])  # change color to blue
+    else:
+        block_commit |= "FAILED" in out[j]
+    i += 1
+out = '\n'.join(out)
+
 print(proc.stderr)  # report errors
 print(out)
 
-if proc.returncode == 1:
+if block_commit:
     print("\033[31mCheck failed, format message or use --no-verify\033[0m\n")
     exit(1)

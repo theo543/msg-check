@@ -1,6 +1,12 @@
 This script is a commit message hook that automatically runs [bad-commit-message-blocker](https://github.com/platisd/bad-commit-message-blocker).
 I wrote this script to use as a global hook to check all my commit messages.
 
+# Configuration
+
+Use the arguments section in config.ini to modify the subject and body length limits.
+
+Use the rules section to disable rules. Disabled rules will be shown in blue and will not block commits.
+
 # Installation
 
 Run the symlink script for your OS and move commit-msg to your hooks folder (recommended for easy updating).
