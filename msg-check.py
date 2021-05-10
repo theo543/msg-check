@@ -12,13 +12,17 @@ DEFAULT_CONFIG = {
 }
 AFTER_SLASH = r"[^/\\]+$"  # find last item in a path
 
-parser = configparser.ConfigParser()
-f = open(sys.argv[1], "r")
-msg = re.sub(re.compile("^#.*\n?", re.MULTILINE), "", f.read())  # remove comments
-folder_path = re.sub(AFTER_SLASH, "bad-commit-message-blocker", os.path.realpath(sys.argv[0]))  # supports symlinks
-slash = re.search(r"[/\\]", folder_path).group(0)
-script_path = folder_path + slash + "bad_commit_message_blocker.py"
+
+# compute paths
+py_file = os.path.realpath(sys.argv[0])  # supports symlinks
+py_folder = re.sub(AFTER_SLASH, "", py_file)
+bcmb_folder = re.sub(AFTER_SLASH, "bad-commit-message-blocker", os.path.realpath(sys.argv[0]))
+bcmb_path = bcmb_folder + re.search(r"[/\\]", py_file).group() + "bad_commit_message_blocker.py"
 config_path = re.sub(AFTER_SLASH, "msg-check-config.ini", os.path.realpath(sys.argv[0]))
+msg = re.sub(re.compile("^#.*\n?", re.MULTILINE), "", open(sys.argv[1], "r").read())  # remove comments
+# does not support commits with --message ???
+
+parser = configparser.ConfigParser()
 
 try:
     parser.read(config_path)
@@ -45,11 +49,11 @@ if changed:
 if re.match(r"^[\n ]*$", msg):
     exit(0)  # do not check empty message
 
-if not os.path.isdir(folder_path) or not os.path.exists(script_path):
+if not os.path.isdir(bcmb_folder) or not os.path.exists(bcmb_path):
     os.system("git submodule update --init --recursive --force")
 
 proc = subprocess.run(
-    args=["python", script_path, "--message", msg, "--subject-limit", parser['arguments']['subject'], "--body-limit",
+    args=["python", bcmb_path, "--message", msg, "--subject-limit", parser['arguments']['subject'], "--body-limit",
           parser['arguments']['body']], capture_output=True, text=True)
 
 # replace bright color codes with normal codes - git breaks bright codes for some reason
