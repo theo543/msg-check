@@ -74,9 +74,8 @@ def repair_config(p: configparser):
 
 def cleanup_message(s: str):
     # replicate git message cleanup:
-    s = re.sub(re.compile(r"^#.*\n?", re.MULTILINE), "", s) # remove comments
+    s = re.sub(re.compile(r"^#.*\n?", re.MULTILINE), "", s)  # remove comments
     s = s.strip('\n')  # remove trailing newlines
-    s = '\n'.join([x.strip() for x in s.split('\n')])  # remove trailing whitespace from each line
     # does not support commits with --message if you try to start the message with #
     # so don't start with #
     # example: don't use "#23 fix issue", use "Fix issue #23"
