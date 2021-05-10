@@ -15,6 +15,9 @@ msg = re.sub(comment_line, "", f.read())  # remove comments
 folder_path = re.sub(after_slash, "bad-commit-message-blocker", os.path.realpath(sys.argv[0]))  # supports symlinks
 script_path = folder_path + re.search(get_slash, folder_path).group(0) + "bad_commit_message_blocker.py"
 
+if msg == "":
+    exit(0)  # do not check empty message
+
 if not os.path.isdir(folder_path) or not os.path.exists(script_path):
     os.system("git submodule update --init --recursive --force")
 
@@ -23,7 +26,7 @@ proc = subprocess.run(args=["python", script_path, "--message", msg], capture_ou
 # replace bright color codes with normal codes - git breaks bright codes for some reason
 out = re.sub(color_code, "3", str(proc.stdout))
 
-print(proc.stderr) # report errors
+print(proc.stderr)  # report errors
 print(out)
 
 if proc.returncode == 1:
