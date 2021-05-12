@@ -31,4 +31,4 @@ git config --global core.symlinks true
 git config --system core.symlinks true
 ```
 This will enable Git symlinks on your PC.
-If you keep your hooks in a repository (or use symlinks in any other project that's in a repository), you need to do this.
+If you keep your hooks in a repository (or use symlinks in any other project that's in a repository), you need to do this (or gitignore the links).
