@@ -7,7 +7,8 @@ import sys
 
 DEFAULT_CONFIG = {
     'arguments': {'body': '72', 'subject': '50'},
-    'rules': {str(nr): '1' for nr in range(1, 7)}
+    'rules': {str(nr): '1' for nr in range(1, 7)},
+    'core': {'just-warn': '1'}
 }
 
 
@@ -54,10 +55,14 @@ def main():
     print(proc.stderr)  # report errors
     print('\n'.join(out))
     if block_commit:
-        print("\033[31mCheck failed, format message or use --no-verify\033[0m")
-        print("Your message was:")
-        print(msg)
-        exit(1)
+        if int(parser['core']['just-warn']) != 0:
+            print("\033[33mCheck failed, consider amending\033[0m")
+            exit(0)
+        else:
+            print("\033[31mCheck failed, format message or use --no-verify\033[0m")
+            print("Your message was:")
+            print(msg)
+            exit(1)
 
 
 def repair_config(p: configparser):
@@ -85,7 +90,7 @@ def cleanup_message(s: str):
 def parse_rules(s, r):
     fail = False
     for i in range(1, 7):
-        if r[str(i)] == '0':
+        if int(r[str(i)]) == 0:
             s[i] = re.sub("(PASSED|FAILED)", "\033[34m\\1", s[i])  # change color to blue
         else:
             fail |= "FAILED" in s[i]
