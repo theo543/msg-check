@@ -16,7 +16,7 @@ def main():
     # compute paths
     py_file = os.path.realpath(sys.argv[0])  # supports symlinks
     py_folder = re.sub(r"[^/\\]+$", "", py_file)
-    bcmb_path = py_folder + "bad-commit-message-blocker" + py_folder[-1] + "bad_commit_message_blocker.py"
+    bcmb_path = py_folder + "bad-commit-message-blocker-1.0.0" + py_folder[-1] + "bad_commit_message_blocker.py"
     config_path = py_folder + "msg-check-config.ini"
 
     msg = cleanup_message(open(sys.argv[1], "r").read())  # remove comments
@@ -36,12 +36,6 @@ def main():
 
     if re.match(r"^[\n ]*$", msg):
         exit(0)  # do not check empty message
-
-    if not os.path.isfile(bcmb_path):
-        os.system("git submodule update --init --recursive --force")
-        if not os.path.isfile(bcmb_path):
-            print("Failed to download bad-commit-message-blocker submodule")
-            exit(0)
 
     proc = subprocess.run(
         args=["python", bcmb_path, "--message", msg, "--subject-limit", parser['arguments']['subject'], "--body-limit",

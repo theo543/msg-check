@@ -15,10 +15,10 @@ Delete the file to restore defaults.
 # Installation
 
 Run the symlink script for your OS and move commit-msg to your hooks folder (recommended for easy updating).
-Alternatively, you could copy the script and the submodule to your hooks folder and rename the script "commit-msg".
+Alternatively, you could copy the script files to your hooks folder and rename the script "commit-msg".
 
 Git does not support multiple hooks of the same type. If you already have global or local commit message hooks, you can
-run msg-check from your hooks. If the bad-commit-message-blocker folder or script is missing the hook will download it.
+run msg-check from your hooks.
 
 **Important:**
 Git for Windows may break symlinks.
