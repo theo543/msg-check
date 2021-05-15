@@ -20,12 +20,20 @@ Alternatively, you could copy the script files to your hooks folder and rename t
 Git does not support multiple hooks of the same type. If you already have global or local commit message hooks, you can
 run msg-check from your hooks.
 
-**Important:**
-Git for Windows may break symlinks.
-This is because admin access is required to create symlinks.
-Git may delete symlinks when running some commands and won't be able to recreate them.
-To allow any user to create symlinks, turn on Developer Mode in the Settings app.
-You may also need to run the following commands to inform Git that symlinks are now enabled and/or restart your computer:
+## Dependencies
+
+Python 3
+
+`pip install textblob`
+
+`python -m textblob.download_corpora`
+
+# Enabling Symlinks on Windows
+
+Git for Windows may break symlinks. This is because admin access is required to create symlinks. Git may delete symlinks
+when running some commands and won't be able to recreate them. To allow any user to create symlinks, turn on Developer
+Mode in the Settings app. You may also need to run the following commands to inform Git that symlinks are now enabled
+and/or restart your computer:
 ```
 git config --local core.symlinks true
 git config --global core.symlinks true
