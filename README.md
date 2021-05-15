@@ -4,7 +4,8 @@ a global hook to check all my commit messages.
 
 ## Configuration
 
-Use the arguments section in msg-check-config.ini (generated when the script is run) to modify the subject and body length limits.
+Use the arguments section in msg-check-config.ini (generated when the script is run) to modify the subject and body
+length limits.
 
 Use the rules section to disable rules. Disabled rules will be shown in blue and will not block commits.
 
@@ -28,24 +29,29 @@ Python 3
 
 `python -m textblob.download_corpora`
 
-# Enabling Symlinks on Windows
+## Enabling Symlinks on Windows
 
 Git for Windows may break symlinks. This is because admin access is required to create symlinks. Git may delete symlinks
 when running some commands and won't be able to recreate them. To allow any user to create symlinks, turn on Developer
 Mode in the Settings app. You may also need to run the following commands to inform Git that symlinks are now enabled
 and/or restart your computer:
+
 ```
 git config --local core.symlinks true
 git config --global core.symlinks true
 git config --system core.symlinks true
 ```
+
 This will enable Git symlinks on your PC.
-If you keep your hooks in a repository (or use symlinks in any other project that's in a repository), you need to do this (or gitignore the links).
+
+If you keep your hooks in a repository (or use symlinks in any other repo), you should either do this or gitignore the
+links.
 
 ## Recommendations
 
 Since GitHub caps titles at 72 characters, you should set your max subject length to 72. No reason to keep it at 50.
 
-You could increase the body length to 80-120 if you want. Just make sure your messages are readable without auto-wrapping.
+You could increase the body length to 80-120 if you want. Just make sure your messages are readable without
+auto-wrapping.
 
 If you commit from your IDE or from a Git GUI tool, it may have built-in commit autoformatting/warning options.
