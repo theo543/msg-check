@@ -47,6 +47,9 @@ def main():
     out = out.split('\n')[-9:-1]
     out, block_commit = parse_rules(out, parser['rules'])
     print(proc.stderr)  # report errors
+    if block_commit == -1:
+        print("\033[31mFailed to check commit message.\033[0m")
+        exit(0)
     print('\n'.join(out))
     if block_commit:
         if int(parser['core']['just-warn']) != 0:
@@ -82,13 +85,16 @@ def cleanup_message(s: str):
 
 
 def parse_rules(s, r):
-    fail = False
-    for i in range(1, 7):
-        if int(r[str(i)]) == 0:
-            s[i] = re.sub("(PASSED|FAILED)", "\033[34m\\1", s[i])  # change color to blue
-        else:
-            fail |= "FAILED" in s[i]
-    return s, fail
+    try:
+        fail = False
+        for i in range(1, 7):
+            if int(r[str(i)]) == 0:
+                s[i] = re.sub("(PASSED|FAILED)", "\033[34m\\1", s[i])  # change color to blue
+            else:
+                fail |= "FAILED" in s[i]
+        return s, fail
+    except:
+        return [], -1
 
 
 if __name__ == "__main__":
